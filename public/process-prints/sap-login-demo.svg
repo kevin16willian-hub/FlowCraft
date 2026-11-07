@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="440" viewBox="0 0 800 440" role="img" aria-label="Print demonstrativo do SAP Logon">
+  <rect width="800" height="440" fill="#edf1ed"/>
+  <rect width="800" height="48" fill="#173e35"/>
+  <circle cx="28" cy="24" r="7" fill="#e2a549"/>
+  <text x="48" y="30" fill="#f7f6ee" font-family="Arial, sans-serif" font-size="17">SAP Logon 770</text>
+  <rect x="34" y="82" width="732" height="304" rx="4" fill="#ffffff" stroke="#c6d1c9"/>
+  <text x="65" y="122" fill="#506158" font-family="Arial, sans-serif" font-size="15" font-weight="700">Sistemas disponíveis</text>
+  <rect x="62" y="145" width="675" height="45" rx="3" fill="#e8f0e1"/>
+  <circle cx="87" cy="167" r="8" fill="#5c9763"/>
+  <text x="110" y="173" fill="#243d30" font-family="Arial, sans-serif" font-size="14">PRD - Produção Brasil</text>
+  <rect x="62" y="205" width="675" height="45" rx="3" fill="#f6f7f3"/>
+  <circle cx="87" cy="227" r="8" fill="#b7c2b9"/>
+  <text x="110" y="233" fill="#607167" font-family="Arial, sans-serif" font-size="14">QAS - Qualidade</text>
+  <rect x="579" y="318" width="158" height="42" rx="3" fill="#d07a2c"/>
+  <text x="620" y="344" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="700">Log On</text>
+</svg>
