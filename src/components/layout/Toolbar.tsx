@@ -7,6 +7,7 @@ import { Island, Stack } from '../ui/Island'
 import { ToolButton } from '../ui/ToolButton'
 import { SHAPE_ICONS } from '../ui/shapeIcons'
 import { DiamondIcon, EllipseIcon, EndEventIcon, HandIcon, LaneIcon, LockIcon, MoreIcon, NoteIcon, PhaseIcon, PoolIcon, RectangleIcon, SelectionIcon, TextIcon, UnlockIcon } from '../ui/icons'
+import { genericItemOf } from '../../utils/genericCatalog'
 
 export type ToolDefinition = { id: string; title: string; key: string; icon: ReactNode; group: number }
 
@@ -27,7 +28,7 @@ export const MAIN_TOOLS: ToolDefinition[] = [
 export const hintFor = (tool: string, shapes: Shape[], awsItems: AwsItem[] = []) => {
   if (tool === 'select') return <span>Para mover a tela, segure <kbd>Roda do mouse</kbd> ou <kbd>Barra de espaço</kbd> enquanto arrasta ou use a ferramenta de mão</span>
   if (tool === 'hand') return <span>Arraste para mover a tela</span>
-  const label = MAIN_TOOLS.find((item) => item.id === tool)?.title ?? shapes.find((shape) => shape.key === tool)?.label ?? awsItems.find((item) => item.key === tool)?.label ?? 'elemento'
+  const label = MAIN_TOOLS.find((item) => item.id === tool)?.title ?? shapes.find((shape) => shape.key === tool)?.label ?? awsItems.find((item) => item.key === tool)?.label ?? genericItemOf(tool)?.label ?? 'elemento'
   return <span>Clique no quadro para inserir: {label}</span>
 }
 

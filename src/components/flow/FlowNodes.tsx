@@ -7,6 +7,7 @@ import { awsFileOf, awsGroupStyle, awsIconUrl, isAwsGroupFile } from '../../util
 import { moveDivider, normalizePool, phasesOf } from '../../utils/containerLayout'
 import { useRealtimeContext } from '../realtime/RealtimeContext'
 import { NodeSuggestions } from './NodeSuggestions'
+import { genericItemOf } from '../../utils/genericCatalog'
 
 type Variant = 'stage' | 'gateway' | 'start' | 'end' | 'pool' | 'lane' | 'phase' | 'text' | 'note' | 'shape'
 
@@ -219,7 +220,29 @@ function AwsNode({ id, data, selected, file }: NodeProps<FlowNode> & { file: str
 
 function ShapeNode(props: NodeProps<FlowNode>) {
   const file = awsFileOf(props.data.extra)
-  return file ? <AwsNode {...props} file={file} /> : <NodeView {...props} />
+  const genericKey = props.data.extra?.generic
+  if (file) return <AwsNode {...props} file={file} />
+  if (typeof genericKey === 'string') return <GenericNode {...props} genericKey={genericKey} />
+  return <NodeView {...props} />
+}
+
+function GenericNode(props: NodeProps<FlowNode> & { genericKey: string }) {
+  const readOnly = useContext(ReadOnlyContext)
+  const live = useRealtimeContext()
+  const { id, data, selected } = props
+  const item = genericItemOf(props.genericKey)
+  if (!item) return <NodeView {...props} />
+  const Icon = item.icon
+  const comments = live.commentCount(id)
+  return (
+    <div className="fc-node fc-generic">
+      {!readOnly && <NodeResizer isVisible={selected} minWidth={64} minHeight={64} />}
+      {comments > 0 && <button type="button" className="fc-node__badge nodrag" title="Ver comentários" onClick={(event) => { event.stopPropagation(); live.openComments(id) }}>💬 {comments}</button>}
+      <span className="fc-generic__icon"><Icon size={34} strokeWidth={1.65} /></span>
+      <EditableTitle id={id} value={data.title} />
+      {HANDLES.map(([handleId, position]) => <Handle key={handleId} id={handleId} type="source" position={position} />)}
+    </div>
+  )
 }
 
 export const nodeTypes = {

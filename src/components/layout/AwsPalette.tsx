@@ -3,30 +3,32 @@ import { awsIconUrl, pushRecentAws, readRecentAws, type AwsItem, type AwsKind } 
 import { DropdownMenu, useCloseMenu } from '../ui/DropdownMenu'
 import { MoreIcon } from '../ui/icons'
 import { ToolButton } from '../ui/ToolButton'
+import { GENERIC_ITEMS, type GenericItem } from '../../utils/genericCatalog'
 
 const QUICK_GROUPS = ['group/aws-cloud.svg', 'group/region.svg', 'group/availability-zone.svg', 'group/virtual-private-cloud-vpc.svg', 'group/public-subnet.svg', 'group/private-subnet.svg']
 const QUICK_SERVICES = 6
 const MAX_CELLS = 150
-const TABS: { kind: AwsKind; label: string }[] = [{ kind: 'service', label: 'Serviços' }, { kind: 'resource', label: 'Recursos' }, { kind: 'group', label: 'Grupos' }]
+const TABS: { kind: AwsKind | 'generic'; label: string }[] = [{ kind: 'service', label: 'Serviços' }, { kind: 'resource', label: 'Recursos' }, { kind: 'group', label: 'Grupos' }, { kind: 'generic', label: 'Genéricos' }]
 
 const Icon = ({ file }: { file: string }) => <img className="aws-tool-icon" src={awsIconUrl(file)} alt="" loading="lazy" draggable={false} />
 
-type BodyProps = { items: AwsItem[]; recent: string[]; onPick: (item: AwsItem) => void }
+type BodyProps = { items: AwsItem[]; genericItems: GenericItem[]; recent: string[]; onPick: (item: AwsItem | GenericItem) => void }
 
-function PaletteBody({ items, recent, onPick }: BodyProps) {
+function PaletteBody({ items, genericItems, recent, onPick }: BodyProps) {
   const close = useCloseMenu()
-  const [kind, setKind] = useState<AwsKind>('service')
+  const [kind, setKind] = useState<AwsKind | 'generic'>('service')
   const [category, setCategory] = useState('')
   const [query, setQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
   // autoFocus rolaria o container (overflow hidden) e deslocaria a toolbar.
   useEffect(() => { searchRef.current?.focus({ preventScroll: true }) }, [])
 
-  const ofKind = useMemo(() => items.filter((item) => item.kind === kind), [items, kind])
+  const ofKind = useMemo<(AwsItem | GenericItem)[]>(() => kind === 'generic' ? genericItems : items.filter((item) => item.kind === kind), [items, genericItems, kind])
   const categories = useMemo(() => [...new Set(ofKind.map((item) => item.category))].sort((a, b) => a.localeCompare(b)), [ofKind])
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase()
-    const rank = (item: AwsItem) => {
+    const rank = (item: AwsItem | GenericItem) => {
+      if (!('file' in item)) return 1000
       const recentAt = recent.indexOf(item.key)
       return recentAt >= 0 ? recentAt : item.common ? 100 + (item.rank ?? 0) : 1000
     }
@@ -35,9 +37,11 @@ function PaletteBody({ items, recent, onPick }: BodyProps) {
       .sort((a, b) => rank(a) - rank(b) || a.label.localeCompare(b.label))
   }, [ofKind, category, query, recent])
 
+  const choose = (item: AwsItem | GenericItem) => { onPick(item); close() }
+
   return (
     <div className="aws-palette">
-      <input ref={searchRef} className="aws-palette__search" type="search" value={query} placeholder="Buscar ícone (ex.: lambda, subnet)" aria-label="Buscar ícone AWS" onChange={(event) => setQuery(event.target.value)} />
+      <input ref={searchRef} className="aws-palette__search" type="search" value={query} placeholder={kind === 'generic' ? 'Buscar componente (ex.: usuário, planilha)' : 'Buscar ícone (ex.: lambda, subnet)'} aria-label={kind === 'generic' ? 'Buscar componente genérico' : 'Buscar ícone AWS'} onChange={(event) => setQuery(event.target.value)} />
       <div className="aws-palette__filters">
         {TABS.map((tab) => (
           <button key={tab.kind} type="button" className={kind === tab.kind ? 'active' : ''} onClick={() => { setKind(tab.kind); setCategory('') }}>{tab.label}</button>
@@ -49,10 +53,10 @@ function PaletteBody({ items, recent, onPick }: BodyProps) {
           </select>
         )}
       </div>
-      <div className="aws-palette__grid">
+      <div className={`aws-palette__grid ${kind === 'generic' ? 'aws-palette__grid--generic' : ''}`}>
         {visible.slice(0, MAX_CELLS).map((item) => (
-          <button key={item.key} type="button" className="aws-palette__cell" title={`${item.label} · ${item.category}`} onClick={() => { onPick(item); close() }}>
-            <Icon file={item.file} />
+          <button key={item.key} type="button" className="aws-palette__cell" title={`${item.label} · ${item.category}`} onClick={() => choose(item)}>
+            {'file' in item ? <Icon file={item.file} /> : <span className="aws-palette__generic-icon"><item.icon size={26} strokeWidth={1.7} /></span>}
             <span>{item.label}</span>
           </button>
         ))}
@@ -87,8 +91,11 @@ export function AwsTools({ items, tool, onToolChange }: Props) {
       {recentExtra.length > 0 && <div className="App-toolbar__divider" />}
       {recentExtra.map(button)}
       <div className="App-toolbar__divider" />
-      <DropdownMenu align="end" triggerIcon={<MoreIcon />} triggerTitle="Todos os ícones AWS" triggerClassName={`App-toolbar__extra-tools-trigger ${hidden && active && !recentExtra.includes(active) ? 'ToolIcon--checked' : ''}`}>
-        <PaletteBody items={items} recent={recent} onPick={pick} />
+      <DropdownMenu align="end" triggerIcon={<MoreIcon />} triggerTitle="Ícones AWS e componentes genéricos" triggerClassName={`App-toolbar__extra-tools-trigger ${(hidden && active && !recentExtra.includes(active)) || tool.startsWith('generic:') ? 'ToolIcon--checked' : ''}`}>
+        <PaletteBody items={items} genericItems={GENERIC_ITEMS} recent={recent} onPick={(item) => {
+          if ('file' in item) pick(item)
+          else onToolChange(item.key)
+        }} />
       </DropdownMenu>
     </>
   )

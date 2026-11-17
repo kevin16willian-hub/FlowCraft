@@ -15,6 +15,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useVersioning } from '../../hooks/useVersioning'
 import type { BoardKind, Graph } from '../../types/board'
 import { awsDefaultSize, awsFileOf, buildAwsNode, isAwsGroupFile } from '../../utils/awsCatalog'
+import { buildGenericNode, genericItemOf } from '../../utils/genericCatalog'
 import { useAwsCatalog } from '../../hooks/useAwsCatalog'
 import { nextLaneFrame, nextPhaseSlot, normalizePool } from '../../utils/containerLayout'
 import { buildNode, containerKind, sortParentsFirst, toApiGraph, toFlowEdges, toFlowNodes, type ContainerKind, type FlowNode } from '../../utils/graphMapping'
@@ -238,9 +239,10 @@ export function Studio() {
   // Cria o elemento da ferramenta ativa: clique usa o tamanho padrao; arrastar define o tamanho.
   const placeNode = (from: Point, to: Point) => {
     const awsItem = tool.startsWith('aws:') ? awsItems.find((item) => item.key === tool) : undefined
-    const shape = awsItem ? undefined : shapes.find((item) => item.key === tool)
-    if (!shape && !awsItem) return
-    const base = awsItem ? awsDefaultSize(awsItem) : shape!
+    const genericItem = tool.startsWith('generic:') ? genericItemOf(tool) : undefined
+    const shape = awsItem || genericItem ? undefined : shapes.find((item) => item.key === tool)
+    if (!shape && !awsItem && !genericItem) return
+    const base = awsItem ? awsDefaultSize(awsItem) : genericItem ? { width: 104, height: 112 } : shape!
     const dragged = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y)) >= DRAG_THRESHOLD
     const start = screenToFlowPosition({ x: Math.min(from.x, to.x), y: Math.min(from.y, to.y) })
     const end = screenToFlowPosition({ x: Math.max(from.x, to.x), y: Math.max(from.y, to.y) })
@@ -255,7 +257,7 @@ export function Studio() {
     if (shape && !dragged && parent && kind === 'phase' && containerKind(parent.type, parent.data.shapeKey) === 'lane') { addPhase(parent.id); if (!locked) setTool('select'); return }
     const origin = absoluteOrigin(parent?.id)
     const frame = { x: x - origin.x, y: y - origin.y, width, height }
-    const node = awsItem ? buildAwsNode(awsItem, frame, parent?.id) : buildNode(shape!, frame, parent?.id)
+    const node = awsItem ? buildAwsNode(awsItem, frame, parent?.id) : genericItem ? buildGenericNode(genericItem, frame, parent?.id) : buildNode(shape!, frame, parent?.id)
     session.setNodes((current) => sortParentsFirst([...current.map((item) => ({ ...item, selected: false })), node]))
     if (!locked) setTool('select')
   }

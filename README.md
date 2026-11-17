@@ -6,13 +6,15 @@ O FlowCraft é um editor visual de quadros para desenhar e colaborar em fluxogra
 
 - **Processos:** elementos de início, fim, etapa e gateway, organizados em pools, raias e fases. Conexões podem ter rótulos; saídas de gateways recebem ramificações “Sim” e “Não”.
 - **VSM e diagramas livres:** use formas, conexões e anotações para representar fluxos de valor ou outros processos.
-- **Arquiteturas AWS:** quadros AWS com catálogo de ícones de serviços, recursos e grupos, incluindo contêineres como contas, regiões, VPCs e sub-redes.
+- **Arquiteturas AWS:** quadros AWS com catálogo de ícones de serviços, recursos e grupos, além de uma paleta de componentes genéricos para pessoas, dispositivos, aplicações, arquivos e integrações.
 - **Edição do quadro:** arrastar e soltar, alinhamento com guias, zoom, desfazer/refazer, pesquisa e exportação da visualização como imagem.
 - **Importação:** criação de diagramas a partir de Mermaid.
 - **Persistência e colaboração:** quadros e alterações salvos pela API; compartilhamento com permissões, times, presença em tempo real, chat, comentários e revisões.
 - **Histórico:** versões, branches, tags e comparação de alterações.
 
 > O editor fornece elementos e recursos para criar diagramas no estilo BPMN e VSM. Isso não implica validação de conformidade BPMN nem um modelo VSM especializado.
+
+No quadro AWS, abra **Ícones AWS e componentes genéricos** na barra de ferramentas e selecione a aba **Genéricos**. A paleta inclui usuário, equipe, celular, tablet, notebook, desktop, navegador, aplicação web/mobile, sistema externo, planilha Excel, PDF, CSV, pasta, banco relacional/NoSQL, servidor local, API, e-mail e fila de mensagens.
 
 ## Tecnologias
 
@@ -34,13 +36,17 @@ Instale as dependências:
 npm install
 ```
 
-O modo de desenvolvimento executa o frontend com Vite na porta padrão `5173`. As chamadas `/api` são encaminhadas para o backend em `http://127.0.0.1:3004`.
+O modo de desenvolvimento executa o editor com Vite na porta padrão `5173` e não precisa de API, SQL Server, Microsoft Entra ID ou S3:
 
 ```bash
 npm run dev
 ```
 
-Para usar os recursos da aplicação que dependem da API, configure as variáveis de ambiente indicadas abaixo e inicie o backend em outro terminal:
+No modo de desenvolvimento, quadros, alterações, comentários, histórico e prints ficam no `localStorage` do navegador. Os prints são armazenados como dados locais, não como arquivos no projeto. Os dados pertencem ao navegador e endereço usados; limpar os dados do site os apaga. O navegador pode limitar a quantidade de dados locais, especialmente se forem anexados muitos prints.
+
+Esse modo é individual: colaboração em tempo real, autenticação, compartilhamento, times, revisões e administração dependem do backend e não ficam disponíveis no modo local.
+
+Para executar a aplicação com backend e recursos de colaboração, configure as variáveis de ambiente indicadas abaixo e inicie a API em outro terminal:
 
 ```bash
 npm run start
@@ -74,7 +80,7 @@ npm run db:seed
 
 | Comando | Descrição |
 | --- | --- |
-| `npm run dev` | Inicia o servidor de desenvolvimento Vite |
+| `npm run dev` | Inicia o editor Vite em modo local, com persistência no navegador |
 | `npm run start` | Inicia a API e serve a aplicação compilada |
 | `npm run build` | Executa a verificação TypeScript e gera a versão de produção em `dist/` |
 | `npm run preview` | Serve localmente a versão compilada |
@@ -97,4 +103,4 @@ templates/            Quadros de exemplo
 
 ## Armazenamento de imagens
 
-No desenvolvimento com Vite, imagens anexadas pelo editor são gravadas localmente em `public/process-prints/uploads/`. No backend, os anexos são armazenados no S3 configurado. Evite adicionar credenciais ou arquivos sensíveis ao repositório.
+No modo local do Vite, prints anexados são guardados no `localStorage` do navegador. No backend, são armazenados no bucket S3 configurado. Evite adicionar credenciais ou arquivos sensíveis ao repositório.

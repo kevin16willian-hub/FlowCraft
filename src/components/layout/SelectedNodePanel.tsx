@@ -5,6 +5,7 @@ import type { AlignMode } from '../../hooks/useSelectionActions'
 import { useRealtimeContext } from '../realtime/RealtimeContext'
 import { Island } from '../ui/Island'
 import { AlignBottomIcon, AlignCenterIcon, AlignLeftIcon, AlignMiddleIcon, AlignRightIcon, AlignTopIcon, BringFrontIcon, CloseIcon, CopyIcon, DistributeHIcon, DistributeVIcon, ImageIcon, LockIcon, SendBackIcon, TrashIcon, UnlockIcon } from '../ui/icons'
+import { genericItemOf } from '../../utils/genericCatalog'
 
 export const MAX_PRINTS = 3
 
@@ -43,7 +44,7 @@ export function SelectedNodePanel({ node, onAddPrint, onRemovePrint, onDuplicate
   return (
     <div className="selected-shape-actions-container">
       <Island className="selected-shape-actions" padding={0}>
-        <span className="selected-shape-actions__title">{TITLES[kind] ?? 'Elemento'}</span>
+        <span className="selected-shape-actions__title">{genericItemOf(typeof node.data.extra?.generic === 'string' ? node.data.extra.generic : '')?.label ?? TITLES[kind] ?? 'Elemento'}</span>
         <label>Título<input type="text" value={node.data.title} maxLength={300} {...field('title')} onChange={(event) => change('title')(event.target.value)} /></label>
         {hasDescription && (
           <label>Descrição<textarea rows={3} value={node.data.description} {...field('description')} onChange={(event) => change('description')(event.target.value)} /></label>

@@ -1,66 +1,24 @@
-# Arquitetura do whiteboard de processos
+# Arquitetura de persistencia
 
-## Objetivo
+## Modo de desenvolvimento
 
-O aplicativo permite documentar automacoes de processo, como scripts SAP, em etapas visuais conectadas. Cada etapa possui nome, descricao, entradas, saidas e um print que pode ser revelado no proprio no do fluxo.
+`npm run dev` usa a camada de API local em `src/api/local.ts`, sem encaminhar chamadas para um backend. Quadros, grafos, comentarios, historico e prints sao guardados no `localStorage` do navegador, sob a chave `flowcraft:local-api:v1`. O salvamento automatico do editor continua ativo.
 
-## Estrutura atual
+Prints sao guardados como data URLs junto aos dados locais. O limite e de 1 MB por imagem, e o armazenamento total depende do navegador. Os dados sao especificos da origem e do perfil do navegador; limpar os dados do site os remove. O modo local nao fornece autenticacao, compartilhamento, times, revisoes ou colaboracao em tempo real.
 
-```text
-src/
-  App.tsx                 # Estado das etapas, formulario e integracao com React Flow
-  App.css                 # Layout do editor, painel e no customizado
-  index.css               # Estilos globais
-public/
-  process-prints/         # Prints de teste servidos estaticamente pelo Vite
-    uploads/               # Prints enviados pelo formulário durante o desenvolvimento
-docs/
-  ARQUITETURA.md          # Esta decisao arquitetural
-```
+## Backend
 
-`App.tsx` mantem uma lista ordenada de `Stage`. Cada item e transformado em um `Node` do React Flow, e as conexoes sequenciais sao recriadas na mesma ordem. Por isso, mover uma etapa no painel esquerdo atualiza imediatamente a ordem visual do processo no quadro.
+Fora do modo de desenvolvimento, `src/api/client.ts` envia chamadas para a API Node. O SQL Server persiste quadros e dados relacionados; os anexos sao armazenados no bucket S3. Credenciais de nuvem ficam somente no backend, nunca no navegador.
 
-## Modelo de uma etapa
+## Persistencia no modo de desenvolvimento
 
-```ts
-type Stage = {
-  id: string
-  area: string
-  title: string
-  `App.tsx` mantem listas independentes de areas e de `Stage`. Cada item e transformado em um `Node` do React Flow, e as conexoes sequenciais sao recriadas na mesma ordem. As areas criam raias BPMN horizontais no quadro; cada etapa e posicionada da esquerda para a direita de acordo com sua ordem global e na raia definida pela sua area. O formulario de etapa abre sob demanda para criar uma etapa ou para editar uma existente. Arrastar uma etapa para outro grupo na barra lateral move a etapa para essa raia sem alterar sua posicao na sequencia. Areas podem ser criadas, renomeadas e excluidas; na exclusao, suas etapas sao movidas para a primeira raia restante.
-  description: string
-  inputs: string
-  outputs: string
-  imageUrl?: string
-}
-```
+Ao executar `npm run dev`, a camada de API local persiste quadros, grafo, comentarios, historico e prints no `localStorage` do navegador, sob a chave `flowcraft:local-api:v1`. O modo nao exige backend, banco de dados ou credenciais de nuvem. A persistencia e especifica ao navegador e a origem; limpar os dados do site remove esses dados. Prints usam o mesmo limite de 1 MB por arquivo do backend e estao sujeitos ao limite de armazenamento do navegador.
 
-## Prints locais no MVP
+O modo local e individual: autenticacao, compartilhamento, times, revisoes e colaboracao em tempo real requerem o backend.
 
-Os prints que devem fazer parte do projeto ficam em `public/process-prints/`. Eles podem ser referenciados com um caminho absoluto, por exemplo:
+## Persistencia no backend
 
-```ts
-imageUrl: '/process-prints/sap-login-demo.svg'
-```
-
-Ao selecionar um arquivo com duplo clique na area de anexo ou colar uma imagem com `Ctrl+V` depois de clicar nessa area, o aplicativo envia o arquivo ao endpoint local do Vite. O print fica gravado em `public/process-prints/uploads/` e recebe uma URL estavel, por isso continua disponivel depois de recarregar a pagina enquanto o arquivo existir nessa pasta.
-
-O processo atual (areas, etapas e URLs dos prints) tambem e salvo no `localStorage` do navegador. Assim, ao recarregar a pagina no mesmo navegador e endereco, as etapas voltam a apontar para os arquivos armazenados em `uploads/`.
-
-Excluir uma etapa remove a etapa do processo salvo e apaga os prints associados que foram enviados para `uploads/`.
-
-## Evolucao para S3
-
-A proxima camada deve separar o upload da interface por meio de uma porta de armazenamento:
-
-```ts
-interface AttachmentStorage {
-  upload(file: File): Promise<{ url: string; key: string }>
-  remove(key: string): Promise<void>
-}
-```
-
-No ambiente local, uma implementacao pode apontar para arquivos estaticos. Em producao, o frontend pede ao backend uma URL pre-assinada, envia o arquivo diretamente ao S3 e persiste `url` e `key` junto com a etapa. Credenciais AWS nunca devem ficar no navegador.
+Com o build de producao e a API Node, grafo e metadados sao salvos no SQL Server; prints sao armazenados no bucket S3 configurado. Credenciais AWS nunca ficam no navegador.
 
 ## Proximos modulos
 

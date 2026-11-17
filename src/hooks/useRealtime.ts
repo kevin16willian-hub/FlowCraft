@@ -5,6 +5,7 @@ import type { ChatMessage, CommentItem, LiveStatus, Ops, Peer, Reaction, RemoteS
 import { applyOps, diffOps, isEmptyOps } from '../utils/graphOps'
 import { sortParentsFirst, toApiGraph, toFlowEdges, toFlowNodes } from '../utils/graphMapping'
 import type { useBoardSession } from './useBoardSession'
+import { isLocalDevelopment } from '../api/client'
 
 type Session = ReturnType<typeof useBoardSession>
 
@@ -32,7 +33,7 @@ type Outbox = Partial<RemoteState> & { chat?: string }
 // Canal ao vivo do quadro: abre quando a pessoa interage, fecha apos inatividade e recupera o que perdeu ao voltar.
 export function useRealtime(boardId: string | null, session: Session, handlers: RealtimeHandlers) {
   const { setViewport } = useReactFlow()
-  const [status, setStatus] = useState<LiveStatus>('off')
+  const [status, setStatus] = useState<LiveStatus>(isLocalDevelopment ? 'offline' : 'off')
   const [peers, setPeers] = useState<Peer[]>([])
   const [chat, setChat] = useState<ChatMessage[]>([])
   const [readCount, setReadCount] = useState(0)
@@ -67,7 +68,7 @@ export function useRealtime(boardId: string | null, session: Session, handlers: 
   useEffect(() => { roleRef.current = session.meta?.role ?? 'viewer' }, [session.meta?.role])
 
   const post = useCallback((body: Record<string, unknown>, keepalive = false) => {
-    if (!boardId) return
+    if (!boardId || isLocalDevelopment) return
     const id = boardId
     inflight.current = inflight.current.then(() => fetch(`/api/boards/${id}/rt`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientId: clientId.current, ...body }), keepalive,
@@ -249,7 +250,7 @@ export function useRealtime(boardId: string | null, session: Session, handlers: 
 
   // Ciclo de vida: abre ao interagir, fecha por inatividade (aba oculta ou sem uso).
   useEffect(() => {
-    if (!boardId || !session.ready) return undefined
+    if (!boardId || !session.ready || isLocalDevelopment) return undefined
     kicked.current = false
     failures.current = 0
     lastActivity.current = Date.now()

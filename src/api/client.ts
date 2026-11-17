@@ -1,17 +1,15 @@
 import type { CommentItem, Severity } from '../types/realtime'
 import type { ChangeRequest, ChangeWithProposal, Decision, UpdateResult } from '../types/review'
 import type { AdminUser, AuditEntry, BoardChanges, BoardKind, BoardDetail, BoardMeta, BoardSummary, Branch, CommitSummary, CurrentUser, Graph, Presence, Shape, ShareList, ShareRole, Tag, TeamDetail, TeamRole, TeamSummary, UserHit } from '../types/board'
+import { ApiError } from './errors'
+import { localApiRequest, storeLocalPrint } from './local'
 
-export class ApiError extends Error {
-  status: number
+export { ApiError } from './errors'
 
-  constructor(status: number, message: string) {
-    super(message)
-    this.status = status
-  }
-}
+export const isLocalDevelopment = import.meta.env.DEV
 
 async function api<T>(method: string, path: string, body?: unknown, keepalive = false): Promise<T> {
+  if (isLocalDevelopment) return localApiRequest<T>(method, path, body)
   const response = await fetch(path, {
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -31,6 +29,7 @@ async function api<T>(method: string, path: string, body?: unknown, keepalive = 
 export type UploadedPrint = { url: string; name: string }
 
 export async function uploadPrint(file: File): Promise<UploadedPrint> {
+  if (isLocalDevelopment) return storeLocalPrint(file)
   const response = await fetch('/api/process-prints', { method: 'POST', headers: { 'Content-Type': file.type }, body: file })
   if (!response.ok) {
     const payload = await response.json().catch(() => ({})) as { error?: string }

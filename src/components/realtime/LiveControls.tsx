@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { Realtime } from '../../hooks/useRealtime'
 import type { LiveStatus, Notice } from '../../types/realtime'
+import { isLocalDevelopment } from '../../api/client'
 
 const STATUS_TEXT: Record<LiveStatus, string> = {
   off: '', connecting: 'Conectando...', live: 'Ao vivo', paused: 'Pausado — mexa para retomar', offline: 'Sem conexão ao vivo',
@@ -16,7 +17,7 @@ export function Roster({ realtime, canPresent, onToggleChat, chatOpen }: RosterP
   return (
     <>
       {status !== 'off' && (
-        <span className={`live-chip live-chip--${status}`} role="status" title="O canal ao vivo abre quando você mexe no quadro e dorme após alguns minutos parado"><span className="live-chip__dot" />{STATUS_TEXT[status]}</span>
+        <span className={`live-chip live-chip--${status}`} role="status" title={isLocalDevelopment ? 'Modo local: colaboração em tempo real indisponível' : 'O canal ao vivo abre quando você mexe no quadro e dorme após alguns minutos parado'}><span className="live-chip__dot" />{isLocalDevelopment ? 'Modo local' : STATUS_TEXT[status]}</span>
       )}
       {peers.map((peer) => (
         <button key={peer.id} type="button" className={`presence-chip__avatar ${followId === peer.id ? 'following' : ''}`} style={{ background: peer.color } as CSSProperties}
