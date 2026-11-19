@@ -168,10 +168,21 @@ function NodeView({ id, type, data, selected }: NodeProps<FlowNode>) {
     isContainer && `fc-node--${variant}`,
     variant === 'text' && 'fc-node--text',
     variant === 'note' && 'fc-node--note',
+    data.extra?.mindmap === true && 'fc-node--mindmap',
+    data.extra?.mindmapRoot === true && 'fc-node--mindmap-root',
+    data.extra?.mindmapGroup === true && 'fc-node--mindmap-group',
   ].filter(Boolean).join(' ')
+  const mindmapColor = data.extra?.mindmapColor
+  const mindmapStyle = typeof mindmapColor === 'object' && mindmapColor !== null
+    ? {
+        '--mindmap-fill': 'fill' in mindmapColor && typeof mindmapColor.fill === 'string' ? mindmapColor.fill : undefined,
+        '--mindmap-border': 'border' in mindmapColor && typeof mindmapColor.border === 'string' ? mindmapColor.border : undefined,
+        '--mindmap-text': 'text' in mindmapColor && typeof mindmapColor.text === 'string' ? mindmapColor.text : undefined,
+      } as CSSProperties
+    : undefined
 
   return (
-    <div className={className} title={variant === 'gateway' && data.description ? data.description : undefined}>
+    <div className={className} style={mindmapStyle} title={variant === 'gateway' && data.description ? data.description : undefined}>
       {!readOnly && <NodeResizer isVisible={selected} minWidth={isContainer ? 80 : 40} minHeight={isContainer ? 60 : 30} onResizeEnd={(_, params) => {
         if (variant === 'pool') setNodes((current) => normalizePool(current, id, params.width))
         else if (variant === 'lane') setNodes((current) => { const parent = current.find((node) => node.id === id)?.parentId; return parent ? normalizePool(current, parent) : current })

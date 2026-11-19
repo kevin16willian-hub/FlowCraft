@@ -10,7 +10,7 @@ import { httpError, readJson, send } from '../utils/http.js'
 import { createRouter } from '../utils/router.js'
 
 const SMALL_JSON = 64 * 1024
-const BOARD_KINDS = ['flowchart', 'aws']
+const BOARD_KINDS = ['flowchart', 'aws', 'business-plan']
 
 const user = ({ request }) => request.user.unumber
 

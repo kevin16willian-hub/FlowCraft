@@ -39,7 +39,7 @@ export type ApiEdge = {
 export type Graph = { nodes: ApiNode[]; edges: ApiEdge[] }
 
 export type Viewport = { x: number; y: number; zoom: number }
-export type BoardKind = 'flowchart' | 'aws'
+export type BoardKind = 'flowchart' | 'aws' | 'business-plan'
 export type BoardSettings = { background?: string; kind?: BoardKind }
 
 export type Role = 'viewer' | 'editor' | 'owner'

@@ -21,6 +21,7 @@ type BoardsPanelProps = {
 const BOARD_KINDS: { kind: BoardKind; title: string; text: string }[] = [
   { kind: 'flowchart', title: 'Fluxograma', text: 'Processos, decisões e swimlanes' },
   { kind: 'aws', title: 'Arquitetura AWS', text: 'Ícones oficiais, VPCs e sub-redes' },
+  { kind: 'business-plan', title: 'Plano de Negócios', text: 'Mapa mental com tópicos e comentários embutidos' },
 ]
 
 const iconButton = (title: string, icon: ReactNode, onClick: () => void) => (

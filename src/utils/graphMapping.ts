@@ -68,7 +68,7 @@ export const toFlowEdges = (edges: ApiEdge[]): Edge[] => edges.map((edge) => ({
   targetHandle: edge.targetHandle,
   type: edge.type ?? 'smoothstep',
   label: edge.label ?? undefined,
-  markerEnd: { type: MarkerType.ArrowClosed },
+  markerEnd: edge.data?.mindmap === true ? undefined : { type: MarkerType.ArrowClosed },
   style: edge.style ? (edge.style as CSSProperties) : undefined,
   data: { branch: edge.branch, style: edge.style, extra: edge.data },
 }))

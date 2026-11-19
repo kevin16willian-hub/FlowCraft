@@ -23,9 +23,12 @@ type SelectedNodePanelProps = Layers & {
   onToggleLock: () => void
   onAddChild: (kind: 'lane' | 'phase') => void
   onFitPool: () => void
+  mindmap?: boolean
+  mindmapCanAddSibling?: boolean
+  onAddMindmapTopic?: (relation: 'child' | 'sibling') => void
 }
 
-export function SelectedNodePanel({ node, onAddPrint, onRemovePrint, onDuplicate, onToggleLock, onReorder, onAddChild, onFitPool }: SelectedNodePanelProps) {
+export function SelectedNodePanel({ node, onAddPrint, onRemovePrint, onDuplicate, onToggleLock, onReorder, onAddChild, onFitPool, mindmap = false, mindmapCanAddSibling = false, onAddMindmapTopic }: SelectedNodePanelProps) {
   const { updateNodeData, deleteElements } = useReactFlow()
   const live = useRealtimeContext()
   const fileInput = useRef<HTMLInputElement>(null)
@@ -47,7 +50,13 @@ export function SelectedNodePanel({ node, onAddPrint, onRemovePrint, onDuplicate
         <span className="selected-shape-actions__title">{genericItemOf(typeof node.data.extra?.generic === 'string' ? node.data.extra.generic : '')?.label ?? TITLES[kind] ?? 'Elemento'}</span>
         <label>Título<input type="text" value={node.data.title} maxLength={300} {...field('title')} onChange={(event) => change('title')(event.target.value)} /></label>
         {hasDescription && (
-          <label>Descrição<textarea rows={3} value={node.data.description} {...field('description')} onChange={(event) => change('description')(event.target.value)} /></label>
+          <label>{mindmap ? 'Comentário embutido' : 'Descrição'}<textarea rows={3} value={node.data.description} placeholder={mindmap ? 'Adicione contexto a este tópico, sem precisar anexar um print.' : undefined} {...field('description')} onChange={(event) => change('description')(event.target.value)} /></label>
+        )}
+        {mindmap && onAddMindmapTopic && (
+          <div className="selected-shape-actions__row">
+            <button type="button" className="excalidraw-button" onClick={() => onAddMindmapTopic('child')}>+ Tópico filho</button>
+            {mindmapCanAddSibling && <button type="button" className="excalidraw-button" onClick={() => onAddMindmapTopic('sibling')}>+ Tópico irmão</button>}
+          </div>
         )}
         {type === 'stage' && (
           <>

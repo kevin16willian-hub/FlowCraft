@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuItem } from '../ui/DropdownMenu'
 import { Island, Stack } from '../ui/Island'
 import { ToolButton } from '../ui/ToolButton'
 import { SHAPE_ICONS } from '../ui/shapeIcons'
-import { DiamondIcon, EllipseIcon, EndEventIcon, HandIcon, LaneIcon, LockIcon, MoreIcon, NoteIcon, PhaseIcon, PoolIcon, RectangleIcon, SelectionIcon, TextIcon, UnlockIcon } from '../ui/icons'
+import { DiamondIcon, EllipseIcon, EndEventIcon, HandIcon, LaneIcon, LockIcon, MoreIcon, NoteIcon, PhaseIcon, PoolIcon, PlusIcon, RectangleIcon, SelectionIcon, TextIcon, UnlockIcon } from '../ui/icons'
 import { genericItemOf } from '../../utils/genericCatalog'
 
 export type ToolDefinition = { id: string; title: string; key: string; icon: ReactNode; group: number }
@@ -44,13 +44,22 @@ type ToolbarProps = {
   hint: ReactNode
   onToolChange: (tool: string) => void
   onLockChange: (locked: boolean) => void
+  mindmapActions?: {
+    canAddRoot: boolean
+    canAddChild: boolean
+    canAddSibling: boolean
+    onAddRoot: () => void
+    onAddChild: () => void
+    onAddSibling: () => void
+  }
 }
 
-export function Toolbar({ tool, locked, kind, shapes, awsItems, hint, onToolChange, onLockChange }: ToolbarProps) {
+export function Toolbar({ tool, locked, kind, shapes, awsItems, hint, onToolChange, onLockChange, mindmapActions }: ToolbarProps) {
   const tools = toolsFor(kind)
   const mainIds = new Set(MAIN_TOOLS.map((item) => item.id))
   const extraShapes = kind === 'aws' ? [] : shapes.filter((shape) => !mainIds.has(shape.key) && SHAPE_ICONS[shape.key])
   const extraActive = extraShapes.some((shape) => shape.key === tool)
+  const mindmap = kind === 'business-plan'
 
   return (
     <Stack direction="vertical" gap={4} style={{ justifyItems: 'start' }}>
@@ -66,14 +75,30 @@ export function Toolbar({ tool, locked, kind, shapes, awsItems, hint, onToolChan
               onClick={() => onLockChange(!locked)}
             />
             <div className="App-toolbar__divider" />
-            {tools.map((item, index) => (
+            {mindmap ? (
+              <>
+                {MAIN_TOOLS.filter((item) => item.id === 'select' || item.id === 'hand').map((item) => (
+                  <ToolButton key={item.id} icon={item.icon} title={item.title} keybinding={item.key} checked={tool === item.id} onClick={() => onToolChange(item.id)} />
+                ))}
+                <div className="App-toolbar__divider" />
+                <button type="button" className="ToolIcon ToolIcon_type_toggle ToolIcon_size_medium" title="Criar tópico central" aria-label="Criar tópico central" disabled={!mindmapActions?.canAddRoot} onClick={mindmapActions?.onAddRoot}>
+                  <div className="ToolIcon__icon"><PlusIcon /></div>
+                </button>
+                <button type="button" className="ToolIcon ToolIcon_type_toggle ToolIcon_size_medium" title="Adicionar subtópico ao tópico selecionado" aria-label="Adicionar subtópico" disabled={!mindmapActions?.canAddChild} onClick={mindmapActions?.onAddChild}>
+                  <div className="ToolIcon__icon"><RectangleIcon /></div>
+                </button>
+                <button type="button" className="ToolIcon ToolIcon_type_toggle ToolIcon_size_medium" title="Adicionar tópico no mesmo nível" aria-label="Adicionar tópico irmão" disabled={!mindmapActions?.canAddSibling} onClick={mindmapActions?.onAddSibling}>
+                  <div className="ToolIcon__icon"><NoteIcon /></div>
+                </button>
+              </>
+            ) : tools.map((item, index) => (
               <span key={item.id} style={{ display: 'contents' }}>
                 {index > 0 && tools[index - 1].group !== item.group && <div className="App-toolbar__divider" />}
                 <ToolButton icon={item.icon} title={item.title} keybinding={item.key} checked={tool === item.id} onClick={() => onToolChange(item.id)} />
               </span>
             ))}
-            {kind === 'aws' && <AwsTools items={awsItems} tool={tool} onToolChange={onToolChange} />}
-            {extraShapes.length > 0 && (
+            {!mindmap && kind === 'aws' && <AwsTools items={awsItems} tool={tool} onToolChange={onToolChange} />}
+            {!mindmap && extraShapes.length > 0 && (
               <>
                 <div className="App-toolbar__divider" />
                 <DropdownMenu triggerIcon={<MoreIcon />} triggerTitle="Mais formas" triggerClassName={`App-toolbar__extra-tools-trigger ${extraActive ? 'ToolIcon--checked' : ''}`}>

@@ -1,0 +1,37 @@
+flowchart LR
+    subgraph Descoberta
+        A([Início]) --> B[Identificar oportunidade]
+        B --> C[Pesquisar mercado]
+        C --> D{Demanda validada?}
+        D -- Não --> E[Refinar hipótese]
+        E --> C
+    end
+
+    subgraph Planejamento
+        F[Definir público-alvo] --> G[Mapear problema do cliente]
+        G --> H[Definir proposta de valor]
+        H --> I[Desenhar produto ou serviço]
+        I --> J{Solução validada?}
+        J -- Não --> K[Ajustar proposta]
+        K --> H
+        J -- Sim --> L[Planejar vendas e marketing]
+        L --> M[Planejar operação e equipe]
+        M --> N[Projetar custos e receitas]
+    end
+
+    subgraph Viabilidade
+        N --> O{Plano financeiramente viável?}
+        O -- Não --> P[Revisar custos ou modelo de receita]
+        P --> N
+        O -- Sim --> Q{Precisa de investimento externo?}
+        Q -- Sim --> R[Preparar plano para investidores]
+        R --> S[Buscar investimento]
+        S --> T{Capital aprovado?}
+        T -- Não --> U[Revisar proposta de investimento]
+        U --> R
+        T -- Sim --> V[Preparar lançamento]
+        Q -- Não --> V
+        V --> W([Lançar negócio])
+    end
+
+    D -- Sim --> F

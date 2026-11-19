@@ -19,6 +19,7 @@ import { buildGenericNode, genericItemOf } from '../../utils/genericCatalog'
 import { useAwsCatalog } from '../../hooks/useAwsCatalog'
 import { nextLaneFrame, nextPhaseSlot, normalizePool } from '../../utils/containerLayout'
 import { buildNode, containerKind, sortParentsFirst, toApiGraph, toFlowEdges, toFlowNodes, type ContainerKind, type FlowNode } from '../../utils/graphMapping'
+import { businessPlanTemplate, createMindmapRoot, createMindmapTopic } from '../../utils/businessPlanTemplate'
 import { placeBeside } from '../../utils/mermaidImport'
 import { FlowCanvas } from '../flow/FlowCanvas'
 import { ReadOnlyContext } from '../flow/FlowNodes'
@@ -141,6 +142,14 @@ export function Studio() {
   const createsNodes = !readOnly && tool !== 'select' && tool !== 'hand'
   const selectedNodes = session.nodes.filter((node) => node.selected)
   const selected = selectedNodes.length === 1 ? selectedNodes[0] : null
+  const mindmapRoot = session.nodes.find((node) => node.data.extra?.mindmapRoot === true)
+  const mindmapSelection = selected ?? mindmapRoot ?? null
+  const addMindmapTopic = (relation: 'child' | 'sibling') => {
+    if (!mindmapSelection) return
+    const { node, edge } = createMindmapTopic(session.nodes, session.edges, mindmapSelection.id, relation)
+    session.setNodes((current) => [...current.map((item) => ({ ...item, selected: false })), node])
+    session.setEdges((current) => [...current, edge])
+  }
   const background = session.meta?.settings?.background ?? BACKGROUNDS[0]
   const boardKind: BoardKind = session.meta?.settings?.kind ?? 'flowchart'
   const awsItems = useAwsCatalog(boardKind === 'aws')
@@ -382,7 +391,10 @@ export function Studio() {
 
   const openBoards = () => { void boards.refresh(); setBoardsOpen(true) }
   const openBoard = async (id: string) => { await session.flush(); boards.open(id) }
-  const createBoard = async (name: string, kind: BoardKind) => { await session.flush(); await boards.create(name, undefined, kind) }
+  const createBoard = async (name: string, kind: BoardKind) => {
+    await session.flush()
+    await boards.create(name, kind === 'business-plan' ? businessPlanTemplate() : undefined, kind)
+  }
   const duplicateBoard = async (id: string) => { await session.flush(); await boards.duplicate(id) }
 
   const renameBoard = async (id: string, name: string) => {
@@ -493,6 +505,13 @@ export function Studio() {
               {!readOnly && selected && (
                 <SelectedNodePanel
                   node={selected}
+                  mindmap={boardKind === 'business-plan'}
+                  mindmapCanAddSibling={session.edges.some((edge) => edge.target === selected.id)}
+                  onAddMindmapTopic={(relation) => {
+                    const { node, edge } = createMindmapTopic(session.nodes, session.edges, selected.id, relation)
+                    session.setNodes((current) => [...current.map((item) => ({ ...item, selected: false })), node])
+                    session.setEdges((current) => [...current, edge])
+                  }}
                   onAddPrint={(file) => { void addPrint(selected.id, file) }}
                   onRemovePrint={(name) => removePrint(selected.id, name)}
                   onDuplicate={actions.duplicate}
@@ -508,7 +527,28 @@ export function Studio() {
             </Stack>
 
             <section className="shapes-section">
-              {!readOnly && <Toolbar tool={tool} locked={locked} kind={boardKind} shapes={shapes} awsItems={awsItems} hint={hintFor(tool, shapes, awsItems)} onToolChange={setTool} onLockChange={setLocked} />}
+              {!readOnly && <Toolbar
+                tool={tool}
+                locked={locked}
+                kind={boardKind}
+                shapes={shapes}
+                awsItems={awsItems}
+                hint={hintFor(tool, shapes, awsItems)}
+                onToolChange={setTool}
+                onLockChange={setLocked}
+                mindmapActions={boardKind === 'business-plan' ? {
+                  canAddRoot: !mindmapRoot,
+                  canAddChild: !!mindmapSelection,
+                  canAddSibling: !!selected && session.edges.some((edge) => edge.target === selected.id),
+                  onAddRoot: () => {
+                    if (mindmapRoot) return
+                    const root = createMindmapRoot()
+                    session.setNodes((current) => [...current.map((item) => ({ ...item, selected: false })), root])
+                  },
+                  onAddChild: () => addMindmapTopic('child'),
+                  onAddSibling: () => addMindmapTopic('sibling'),
+                } : undefined}
+              />}
               {readOnly && (session.meta?.protected
                 ? <button type="button" className="role-chip role-chip--action" onClick={() => { setReviewOpen(true); void refreshReview() }}>Quadro protegido · proponha uma mudança</button>
                 : <span className="role-chip">Somente leitura</span>)}

@@ -169,7 +169,7 @@ export async function localApiRequest<T>(method: string, path: string, body?: un
   } else if (route === '/api/boards' && method === 'POST') {
     const input = body as { name?: unknown; kind?: unknown } | undefined
     if (typeof input?.name !== 'string' || !input.name.trim() || input.name.trim().length > 200) throw new ApiError(400, 'nome obrigatório (até 200 caracteres)')
-    if (input.kind !== undefined && input.kind !== 'flowchart' && input.kind !== 'aws') throw new ApiError(400, 'tipo de quadro inválido')
+    if (input.kind !== undefined && input.kind !== 'flowchart' && input.kind !== 'aws' && input.kind !== 'business-plan') throw new ApiError(400, 'tipo de quadro inválido')
     const timestamp = now()
     const boardId = id()
     const branchId = id()
@@ -179,7 +179,7 @@ export async function localApiRequest<T>(method: string, path: string, body?: un
     }
     const board: StoredBoard = {
       id: boardId, name: input.name.trim(), description: null, headBranchId: branchId, baseCommitId: initial.id,
-      viewport: null, settings: input.kind === 'aws' ? { kind: 'aws' } : null, archived: false,
+      viewport: null, settings: input.kind && input.kind !== 'flowchart' ? { kind: input.kind } : null, archived: false,
       createdAt: timestamp, updatedAt: timestamp, rowVersion: '1', role: 'owner', ownerUnumber: LOCAL_USER.unumber,
       protected: false, reviewTeamId: null, nodes: [], edges: [], dirty: false,
       commits: [initial], branches: [{ id: branchId, name: 'main', headCommitId: initial.id, createdBy: LOCAL_USER.unumber, createdAt: timestamp }],
